@@ -1,64 +1,43 @@
-function updateTime() {
-    let currentDay = dayjs().format("MM-DD-YYYY");
+const scheduleElArray = [
+    $("#9AM"),
+    $("#10AM"),
+    $("#11AM"),
+    $("#12PM"),
+    $("#1PM"),
+    $("#2PM"),
+    $("#3PM"),
+    $("#4PM"),
+    $("#5PM")
+];
 
-    const currentHour = dayjs().format('H');
 
+function updateScheduleAppearance() {
+    const currentTime = dayjs();
+    const currentHour = currentTime.hour();
 
+    $("#currentDay").text(currentTime.format("MM-DD-YYYY"));
 
-    $("#currentDay").text(currentDay)
+    for (const scheduleEl of scheduleElArray) {
+        const scheduleHour = parseInt(scheduleEl.data("hour"));
 
+        scheduleEl.removeClass("past present future");
 
-
-    let today = dayjs().format("H");
-    console.log(today)
-    for (let i = 0; i < scheduleElArray.length; i++) {
-        scheduleElArray[i].removeClass("future past present");
-
-        if (today > scheduleElArray[i].data("hour")) {
-            scheduleElArray[i].addClass("past");
-
-        } else if (today === scheduleElArray[i].attr("data-hour")) {
-            scheduleElArray[i].addClass("present");
-
+        if (scheduleHour < currentHour) {
+            scheduleEl.addClass("past");
+        } else if (scheduleHour === currentHour) {
+            scheduleEl.addClass("present");
         } else {
-
-            scheduleElArray[i].addClass("future");
+            scheduleEl.addClass("future");
         }
     }
 }
 
-let saveBttn = $(".save-icon");
-let containerEl = $(".container");
-let sch9am = $("#9AM");
-let sch10am = $("#10AM");
-let sch11am = $("#11AM");
-let sch12pm = $("#12PM");
-let sch1pm = $("#1PM");
-let sch2pm = $("#2PM");
-let sch3pm = $("#3PM");
-let sch4pm = $("#4PM");
-let sch5pm = $("#5PM");
 
-let scheduleElArray = [
-    sch9am,
-    sch10am,
-    sch11am,
-    sch12pm,
-    sch1pm,
-    sch2pm,
-    sch3pm,
-    sch4pm,
-    sch5pm,
-];
-
-renderLastRegistered();
-updateTime();
-setInterval(updateTime, 1000);
-
-function renderLastRegistered() {
-    for (let el of scheduleElArray) {
-        el.val(localStorage.getItem("time block " + el.data("hour")));
-
+function renderSavedInput() {
+    for (const scheduleEl of scheduleElArray) {
+        const hour = scheduleEl.data("hour");
+        const savedInput = localStorage.getItem(`time block ${hour}`);
+        scheduleEl.find("textarea").val(savedInput);
     }
 }
 
@@ -66,13 +45,19 @@ function renderLastRegistered() {
 function handleFormSubmit(event) {
     event.preventDefault();
 
-    let btnClicked = $(event.currentTarget);
+    const textarea = $(event.currentTarget).siblings("textarea");
+    const hour = textarea.data("hour");
+    const userInput = textarea.val();
 
-    let targetText = btnClicked.siblings("textarea");
-
-    let targetTimeBlock = targetText.data("hour");
-
-    localStorage.setItem("time block " + targetTimeBlock, targetText.val());
+    localStorage.setItem(`time block ${hour}`, userInput);
 }
 
-saveBttn.on("click", handleFormSubmit);
+
+$(".save-icon").on("click", handleFormSubmit);
+
+
+$(document).ready(function () {
+    renderSavedInput();
+    updateScheduleAppearance();
+    setInterval(updateScheduleAppearance, 1000);
+});
